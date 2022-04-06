@@ -377,5 +377,4 @@ class FollowTest(TestCase):
         self.assertIn(post, obj)
         response = self.client_author_following.get(
             reverse('posts:follow_index'))
-        obj = response.context['page_obj'].object_list
-        self.assertNotIn(post, obj)
+        self.assertNotContains(response, obj)

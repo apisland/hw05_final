@@ -107,3 +107,13 @@ class PostURLTests(TestCase):
         """кастомный шаблон для страницы 404"""
         response = self.guest_client.get('/unexisting_page/')
         self.assertTemplateUsed(response, 'core/404.html')
+
+    def test_template_for_page_403(self):
+        """кастомный шаблон для страницы 403"""
+        response = self.guest_client.get('/403/')
+        self.assertTemplateUsed(response, 'core/403.html')
+
+    def test_template_for_page_500(self):
+        """кастомный шаблон для страницы 500"""
+        response = self.guest_client.get('/500/')
+        self.assertTemplateUsed(response, 'core/500.html')

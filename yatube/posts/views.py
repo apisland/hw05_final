@@ -143,3 +143,11 @@ def profile_unfollow(request, username):
     following = get_object_or_404(Follow, user=request.user, author=author)
     following.delete()
     return redirect('posts:profile', username=username)
+
+
+def server_error(request):
+    return render(request, 'core/500.html', status=500)
+
+
+def permission_denied(request, exception):
+    return render(request, 'core/403.html', status=403)
