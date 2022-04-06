@@ -327,10 +327,10 @@ class FollowTest(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.user_follower = User.objects.create_user(username='test_name3',
+        cls.user_follower = User.objects.create_user(username='follower',
                                                      email='test3@mail.ru',
                                                      password='test-pass3')
-        cls.author_following = User.objects.create_user(username='test_name4',
+        cls.author_following = User.objects.create_user(username='following',
                                                         email='test4@mail.ru',
                                                         password='test-pass4')
         cls.post = Post.objects.create(
@@ -377,4 +377,5 @@ class FollowTest(TestCase):
         self.assertIn(post, obj)
         response = self.client_author_following.get(
             reverse('posts:follow_index'))
-        self.assertNotContains(response, obj)
+        obj = response.context['page_obj'].object_list
+        self.assertNotIn(post, obj)
