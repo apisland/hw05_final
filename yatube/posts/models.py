@@ -29,9 +29,6 @@ class Post(models.Model):
         verbose_name='Автор'
     )
 
-    def __str__(self):
-        return self.text
-
     group = models.ForeignKey(
         Group,
         blank=True,
@@ -48,6 +45,9 @@ class Post(models.Model):
         blank=True
     )
 
+    def __str__(self):
+        return self.text
+
     class Meta:
         ordering = ('-pub_date',)
         verbose_name_plural = 'Записи блогов'
@@ -58,7 +58,7 @@ class Comment(models.Model):
         Post,
         on_delete=models.CASCADE,
         related_name='comments',
-        verbose_name='Комментарий'
+        verbose_name='Форма комментария'
     )
     author = models.ForeignKey(
         User,
@@ -74,6 +74,10 @@ class Comment(models.Model):
     def __str__(self):
         return self.text
 
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+
 
 class Follow(models.Model):
     user = models.ForeignKey(
@@ -88,3 +92,14 @@ class Follow(models.Model):
         related_name='following',
         verbose_name='Автор для подписки'
     )
+
+    class Meta:
+        verbose_name = 'Подписчик'
+        verbose_name_plural = 'Подписчики'
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'author'],
+                                    name='follow_1_time_no_self_follow')
+        ]
+
+    def __str__(self):
+        return f"'Подписчик: '{self.user}', Автор : '{self.author}'"

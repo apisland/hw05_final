@@ -9,7 +9,8 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.cache import cache
 
-from posts.models import Post, Group, Follow
+from posts.models import Post, Group, Follow, Comment
+
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
@@ -148,6 +149,27 @@ class PostViewsTests(TestCase):
         self.assertEqual(post_id_0, self.post.id)
         self.assertEqual(post_img_0, self.post.image)
 
+    def test_comment_in_page_detail_context(self):
+        """Комментарии передаются в контекст страницы page_detail"""
+        response = self.authorized_client.get(reverse('posts:post_detail',
+                                              kwargs={'post_id':
+                                                      f'{self.post.id}'}))
+        first_object = response.context['post']
+        comment_0 = first_object.comments
+        self.assertEqual(comment_0, self.post.comments)
+
+    def test_comment_in_correct_page(self):
+        """Комментарий появляется на нужной странице"""
+        form_data = {
+            'text': 'Добавил комментарий',
+        }
+        self.authorized_client.post(reverse('posts:add_comment',
+                                            kwargs={'post_id':
+                                                    f'{self.post.id}'}),
+                                    data=form_data,
+                                    follow=True)
+        self.assertTrue(Comment.objects.filter(id=self.post.id).exists())
+
     def test_create_page_context(self):
         """Тест контекста страницы создания поста"""
         response = self.authorized_client.get(reverse('posts:post_create'))
@@ -277,32 +299,12 @@ class CacheTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        small_jpg = (
-            b'\x47\x49\x46\x38\x39\x61\x02\x00'
-            b'\x01\x00\x80\x00\x00\x00\x00\x00'
-            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
-            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
-            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
-            b'\x0A\x00\x3B'
-        )
-        uploaded = SimpleUploadedFile(
-            name='small.jpg',
-            content=small_jpg,
-            content_type='image/jpg'
-        )
         cls.author = User.objects.create_user(username='test_name',
                                               email='test@mail.ru',
                                               password='test-pass')
-        cls.group = Group.objects.create(
-            title='Тестовое название группы',
-            slug='rat'
-        )
-
         cls.post = Post.objects.create(
             author=cls.author,
             text='Тестовый текст',
-            group=cls.group,
-            image=uploaded
         )
 
     def setUp(self):
@@ -313,14 +315,14 @@ class CacheTest(TestCase):
         self.authorized_client.force_login(self.user)
 
     def test_cache_index_page(self):
-        response = self.authorized_client.get(reverse('posts:index'))
-        before_cache_clear = response.content
+        first_case = self.authorized_client.get(reverse('posts:index'))
         post = Post.objects.get(id=self.post.id)
         post.delete()
+        second_case = self.authorized_client.get(reverse('posts:index'))
+        self.assertEqual(first_case.content, second_case.content)
         cache.clear()
-        response = self.authorized_client.get(reverse('posts:index'))
-        after_cache_clear = response.content
-        self.assertNotEqual(before_cache_clear, after_cache_clear)
+        third_case = self.authorized_client.get(reverse('posts:index'))
+        self.assertNotEqual(first_case.content, third_case.content)
 
 
 class FollowTest(TestCase):
@@ -356,11 +358,14 @@ class FollowTest(TestCase):
     def test_auth_user_unfollow(self):
         """Авторизованный пользователь может
         удалять подписки на других"""
+        self.client_user_follower.get(
+            reverse('posts:profile_follow',
+                    kwargs={'username': self.author_following.username}))
         follow_cnt = Follow.objects.count()
         self.client_user_follower.get(
             reverse('posts:profile_unfollow',
                     kwargs={'username': self.author_following.username}))
-        self.assertEqual(Follow.objects.count(), follow_cnt)
+        self.assertEqual(Follow.objects.count(), follow_cnt - 1)
 
     def test_subscribe_feed(self):
         """Новая запись пользователя появляется в ленте тех,

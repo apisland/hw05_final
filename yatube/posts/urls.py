@@ -24,7 +24,4 @@ urlpatterns = [
         views.profile_unfollow,
         name='profile_unfollow'
     ),
-    path('403/', views.permission_denied,
-         kwargs={'exception': Exception('Permission Denied')}, name='403'),
-    path('500/', views.server_error, name='500'),
 ]

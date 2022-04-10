@@ -4,6 +4,7 @@ from http import HTTPStatus
 
 from posts.models import Post, Group
 
+
 User = get_user_model()
 
 
@@ -108,12 +109,18 @@ class PostURLTests(TestCase):
         response = self.guest_client.get('/unexisting_page/')
         self.assertTemplateUsed(response, 'core/404.html')
 
-    def test_template_for_page_403(self):
-        """кастомный шаблон для страницы 403"""
-        response = self.guest_client.get('/403/')
-        self.assertTemplateUsed(response, 'core/403.html')
+    def test_urls_for_comment(self):
+        """Тест адреса оставления комментария"""
+        response = self.authorized_client.get('/follow/')
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
-    def test_template_for_page_500(self):
-        """кастомный шаблон для страницы 500"""
-        response = self.guest_client.get('/500/')
-        self.assertTemplateUsed(response, 'core/500.html')
+    def test_urls_for_follow_unfollow(self):
+        """Тест адресов для подписки/отписки"""
+        urls = {
+            f'/profile/{self.user.username}/follow/',
+            f'/profile/{self.user.username}/unfollow/',
+        }
+        for address in urls:
+            with self.subTest():
+                response = self.guest_client.get(address)
+                self.assertEqual(response.status_code, HTTPStatus.FOUND)

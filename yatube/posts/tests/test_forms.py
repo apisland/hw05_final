@@ -185,9 +185,24 @@ class PostCreateFormTests(TestCase):
 
     def test_change_text_other_fields_same(self):
         """При редактировании текста не меняются другие поля"""
+        small_jpg = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        uploaded = SimpleUploadedFile(
+            name='small.jpg',
+            content=small_jpg,
+            content_type='image/jpg'
+        )
+
         form_data = {
             'text': 'Новый текст в форме',
             'group': self.group,
+            'image': uploaded,
         }
         post = self.post
         url = reverse('posts:post_edit', kwargs={'post_id': self.post.id})
@@ -201,6 +216,7 @@ class PostCreateFormTests(TestCase):
         self.assertEqual(same_post.group, post.group)
         self.assertEqual(same_post.author, post.author)
         self.assertEqual(same_post.pub_date, post.pub_date)
+        self.assertEqual(same_post.image, post.image)
 
 
 class CommentTest(TestCase):
@@ -231,6 +247,7 @@ class CommentTest(TestCase):
 
     def test_new_comment_by_auth_user(self):
         """Комментировать может только авторизованный пользователь"""
+        comment_count = Comment.objects.count()
         form_data = {
             'text': 'Новый коммент',
         }
@@ -241,19 +258,25 @@ class CommentTest(TestCase):
         )
         self.assertTrue(Comment.objects.filter(
             text='Новый коммент',
-            id=self.post.id
+            author=self.user
         ).exists()
         )
+        self.assertEqual(Comment.objects.count(), comment_count + 1)
 
-    def test_comment_on_post_page(self):
-        """Комментарий появляется на странице поста"""
+    def test_guest_user_no_comment(self):
+        """Гость не может комментировать посты"""
         comment_count = Comment.objects.count()
         form_data = {
             'text': 'Новый коммент',
         }
-        self.authorized_client.post(
+        self.guest_client.post(
             reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
             data=form_data,
             follow=True,
         )
-        self.assertEqual(Comment.objects.count(), comment_count + 1)
+        self.assertFalse(Comment.objects.filter(
+            text='Новый коммент',
+            author=self.user
+        ).exists()
+        )
+        self.assertEqual(Comment.objects.count(), comment_count)

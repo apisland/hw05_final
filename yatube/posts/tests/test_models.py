@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-from django.conf import settings
 
 from ..models import Group, Post
+from ..models import Comment
 
 
 User = get_user_model()
@@ -15,13 +15,17 @@ class PostModelTest(TestCase):
         cls.user = User.objects.create_user(username='auth')
         cls.post = Post.objects.create(
             author=cls.user,
-            text='Тестовый пост',
+            text='Мы будем использовать post detail view для создания'
+                 'экземпляра формы'
+                 'и обработаем ее так, чтобы ее упростить. Измените файл'
+                 'models.py,'
+                 'добавьте import для модели Comment и CommentForm форму,',
         )
 
     def test_models_have_correct_object_names(self):
         """Проверяем, что у моделей корректно работает __str__."""
         post = PostModelTest.post
-        value = post.text[:settings.POST_MOD]
+        value = post.text
         self.assertEqual(value, str(post))
 
     def test_post_models_help_text(self):
@@ -34,7 +38,7 @@ class PostModelTest(TestCase):
         for key, value in values.items():
             with self.subTest(value=value):
                 help_texts = post._meta.get_field(key).help_text
-        self.assertEqual(help_texts, value)
+                self.assertEqual(help_texts, value)
 
     def test_post_model_verbose(self):
         """Тест полей verbose в модели Post"""
@@ -48,7 +52,7 @@ class PostModelTest(TestCase):
         for key, value in values.items():
             with self.subTest(value=value):
                 verbose = post._meta.get_field(key).verbose_name
-        self.assertEqual(verbose, value)
+                self.assertEqual(verbose, value)
 
 
 class GroupModelTest(TestCase):
@@ -79,4 +83,40 @@ class GroupModelTest(TestCase):
         for key, value in values.items():
             with self.subTest(value=value):
                 verbose = group._meta.get_field(key).verbose_name
-        self.assertEqual(verbose, value)
+                self.assertEqual(verbose, value)
+
+
+class CommentModelTest(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = User.objects.create_user(username='auth')
+        cls.post = Post.objects.create(
+            author=cls.user,
+            text='Тестовый пост',
+        )
+        cls.comment = Comment.objects.create(
+            post=cls.post,
+            author=cls.user,
+            text='Текст нового комментария',
+        )
+
+    def test_comment_models_have_correct_object_names(self):
+        """Проверяем, что у моделей комментариев корректно работает __str__."""
+        comment = CommentModelTest.comment
+        value = comment.text
+        self.assertEqual(value, str(comment))
+
+    def test_comment_model_verbose_names(self):
+        """Тест поля verbose Comment модели"""
+        comment = CommentModelTest.comment
+        values = {
+            'post': 'Форма комментария',
+            'author': 'Автор комментария',
+            'text': 'Текст комментария',
+            'created': 'Дата комментария',
+        }
+        for key, value in values.items():
+            with self.subTest(value=value):
+                verbose = comment._meta.get_field(key).verbose_name
+                self.assertEqual(verbose, value)

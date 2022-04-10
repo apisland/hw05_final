@@ -50,14 +50,13 @@ def post_create(request):
 def post_edit(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     if post.author == request.user:
-        form = PostForm(request.POST,
+        form = PostForm(request.POST or None,
                         files=request.FILES or None,
                         instance=post)
         if form.is_valid():
             form.save()
             return redirect('posts:post_detail', post.pk)
         else:
-            form = PostForm(instance=post)
             context = {
                 'form': form,
                 'post': post,
@@ -71,12 +70,9 @@ def post_edit(request, post_id):
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     author_post = author.posts.select_related('group')
-    if request.user.is_authenticated:
-        following = Follow.objects.filter(
-            user=request.user,
-            author=author).exists()
-    else:
-        following = False
+    following = request.user.is_authenticated and \
+        Follow.objects.filter(user=request.user,
+                              author=author).exists()
     context = {
         'author': author,
         'following': following,
@@ -88,11 +84,9 @@ def profile(request, username):
 def post_detail(request, post_id):
     post = get_object_or_404(Post.objects.select_related('author', 'group'),
                              id=post_id)
-    author = post.author
     form = CommentForm()
     comments = post.comments.all()
     context = {
-        'author': author,
         'post': post,
         'form': form,
         'comments': comments,
@@ -114,7 +108,6 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    # информация о текущем пользователе доступна в переменной request.user
     post_list = Post.objects.filter(author__following__user=request.user)
     context = {
         'page_obj': numeration(post_list, request)
@@ -127,27 +120,15 @@ def profile_follow(request, username):
     # Подписаться на автора
     author = get_object_or_404(User, username=username)
     user = request.user
-    follower = Follow.objects.filter(
-        user=request.user, author=author).exists()
-    if user != author and not follower:
-        Follow.objects.create(user=request.user, author=author)
+    if author != request.user:
+        Follow.objects.get_or_create(user=user, author=author)
     return redirect('posts:profile', username=username)
 
 
 @login_required
 def profile_unfollow(request, username):
-    # Дизлайк, отписка
     author = get_object_or_404(User, username=username)
     if author == request.user:
         return redirect('posts:profile', username=username)
-    following = get_object_or_404(Follow, user=request.user, author=author)
-    following.delete()
+    get_object_or_404(Follow, user=request.user, author=author).delete()
     return redirect('posts:profile', username=username)
-
-
-def server_error(request):
-    return render(request, 'core/500.html', status=500)
-
-
-def permission_denied(request, exception):
-    return render(request, 'core/403.html', status=403)
