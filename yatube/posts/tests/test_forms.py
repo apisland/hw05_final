@@ -1,6 +1,5 @@
 import shutil
 import tempfile
-from xml.etree.ElementTree import Comment
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -273,10 +272,5 @@ class CommentTest(TestCase):
             reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
             data=form_data,
             follow=True,
-        )
-        self.assertFalse(Comment.objects.filter(
-            text='Новый коммент',
-            author=self.user
-        ).exists()
         )
         self.assertEqual(Comment.objects.count(), comment_count)

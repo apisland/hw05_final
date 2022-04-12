@@ -34,6 +34,7 @@ class PostModelTest(TestCase):
         values = {
             'text': 'Текст нового поста',
             'group': 'Группа, к которой относится пост',
+            'image': 'Изображение',
         }
         for key, value in values.items():
             with self.subTest(value=value):
@@ -48,6 +49,7 @@ class PostModelTest(TestCase):
             'pub_date': 'Дата публикации',
             'author': 'Автор',
             'group': 'Группа',
+            'image': 'Картинка',
         }
         for key, value in values.items():
             with self.subTest(value=value):

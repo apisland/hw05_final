@@ -70,9 +70,9 @@ def post_edit(request, post_id):
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     author_post = author.posts.select_related('group')
-    following = request.user.is_authenticated and \
-        Follow.objects.filter(user=request.user,
-                              author=author).exists()
+    following = (request.user.is_authenticated
+                 and Follow.objects.filter(user=request.user,
+                                           author=author).exists())
     context = {
         'author': author,
         'following': following,
@@ -130,5 +130,6 @@ def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
     if author == request.user:
         return redirect('posts:profile', username=username)
-    get_object_or_404(Follow, user=request.user, author=author).delete()
+    get_object_or_404(Follow.objects.filter(user=request.user,
+                                            author=author)).delete()
     return redirect('posts:profile', username=username)

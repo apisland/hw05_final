@@ -42,7 +42,8 @@ class Post(models.Model):
     image = models.ImageField(
         'Картинка',
         upload_to='posts/',
-        blank=True
+        blank=True,
+        help_text='Изображение',
     )
 
     def __str__(self):
@@ -66,7 +67,7 @@ class Comment(models.Model):
         related_name='comments',
         verbose_name='Автор комментария'
     )
-    text = models.TextField(blank=False, help_text='Текст нового комментария',
+    text = models.TextField(help_text='Текст нового комментария',
                             verbose_name='Текст комментария')
     created = models.DateTimeField(auto_now_add=True,
                                    verbose_name='Дата комментария')
