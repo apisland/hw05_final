@@ -1,7 +1,5 @@
 # Yatube
 
-[![CI](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml/badge.svg?branch=master)](https://github.com/yandex-praktikum/hw05_final/actions/workflows/python-app.yml)
-
 Yatube – социальная сеть мини-блогов с возможностью добавления, редактирования, удаления постов. Реализована подписка/отписка на автора, можно добавлять авторов в избранное. Проект покрыт тестами для проверки работоспособности.
 
 ## Запуск проекта:
