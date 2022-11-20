@@ -2,6 +2,11 @@
 
 Yatube – социальная сеть мини-блогов с возможностью добавления, редактирования, удаления постов. Реализована подписка/отписка на автора, можно добавлять авторов в избранное. Проект покрыт тестами для проверки работоспособности.
 
+### Стек технологий
+
+![](https://img.shields.io/badge/Python-3.7-blue)
+![](https://img.shields.io/badge/Django-2.2.16-blue)
+
 ## Запуск проекта:
 - Клонировать репозиторий:
 ```
@@ -31,5 +36,3 @@ python3 manage.py migrate или python manage.py migrate
 ```
 python3 manage.py runserver или python manage.py runserver
 ```
-![](https://img.shields.io/badge/Python-3.7-blue)
-![](https://img.shields.io/badge/Django-2.2.16-blue)
